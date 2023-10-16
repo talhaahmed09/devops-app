@@ -35,7 +35,7 @@ pipeline {
             }
             steps {
                 // Determine the manifest file based on the environment
-                def manifestFile = "${ENVIRONMENT}-deployment.yaml"
+                 manifestFile = "${ENVIRONMENT}-deployment.yaml"
 
                 // Deploy the app to Kubernetes using the Kubernetes Plugin
                 kubernetesDeploy(
