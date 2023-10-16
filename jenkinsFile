@@ -1,34 +1,49 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: jenkins-deployment
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: jenkins
-  template:
-    metadata:
-      labels:
-        app: jenkins
-    spec:
-      containers:
-        - name: jenkins
-          image: jenkins/jenkins:lts
-          ports:
-            - containerPort: 8080
----
+pipeline {
+    agent any
 
+    environment {
+        ENVIRONMENT = "${BRANCH_NAME.toLowerCase()}" // Capture the branch name
+    }
 
-apiVersion: v1
-kind: Service
-metadata:
-  name: jenkins-service
-spec:
-  selector:
-    app: jenkins
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080
-  type: LoadBalancer
+    stages {
+        stage('Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build and Push Docker Images') {
+            when {
+                expression {
+                    return ENVIRONMENT in ['main', 'qa', 'uat']
+                }
+            }
+            steps {
+                // Build and push the Docker images for your applications
+                sh 'docker build -t your-react-app-image:latest ./react-app'
+                sh 'docker build -t your-spring-app-image:latest ./spring-app'
+                sh 'docker push your-react-app-image:latest'
+                sh 'docker push your-spring-app-image:latest'
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            when {
+                expression {
+                    return ENVIRONMENT in ['main', 'qa', 'uat']
+                }
+            }
+            steps {
+                // Determine the manifest file based on the environment
+                def manifestFile = "deployment-${ENVIRONMENT}.yaml"
+
+                // Deploy the app to Kubernetes using the Kubernetes Plugin
+                kubernetesDeploy(
+                    kubectl: 'kubectl',
+                    namespace: 'default', // Modify the namespace as needed
+                    manifests: manifestFile
+                )
+            }
+        }
+    }
+}
