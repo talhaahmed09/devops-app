@@ -6,7 +6,7 @@ pipeline {
         ENVIRONMENT = "${BRANCH_NAME.toLowerCase()}" // Capture the branch name
         MANIFEST_FILE = "${ENVIRONMENT}-deployment.yaml"
         DOCKER_HOME = tool "my-docker"
-        env.PATH = "${DOCKER_HOME}/bin:${env.PATH}"
+        env.PATH = "${DOCKER_HOME}/bin:" + env.PATH
     }
 
     stages {
