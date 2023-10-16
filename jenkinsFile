@@ -4,7 +4,7 @@ pipeline {
     environment {
         ENVIRONMENT = "${BRANCH_NAME.toLowerCase()}" // Capture the branch name
     }
-
+    manifest = ''
     stages {
         stage('Checkout SCM') {
             steps {
@@ -34,8 +34,11 @@ pipeline {
                 }
             }
             steps {
-                // Determine the manifest file based on the environment
+                script {
+    // Determine the manifest file based on the environment
                  manifestFile = "${ENVIRONMENT}-deployment.yaml"
+                }
+            
 
                 // Deploy the app to Kubernetes using the Kubernetes Plugin
                 kubernetesDeploy(
