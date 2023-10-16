@@ -1,11 +1,25 @@
 pipeline {
     agent any
 
+    // Define environment variables
     environment {
         ENVIRONMENT = "${BRANCH_NAME.toLowerCase()}" // Capture the branch name
+        MANIFEST_FILE = "${ENVIRONMENT}-deployment.yaml"
+        DOCKER_HOME = tool "my-docker"
     }
 
     stages {
+        stage('Initialize') {
+            steps {
+                script {
+                    // Set the PATH environment variable to the Docker tool's bin directory.
+                    withEnv(["PATH=${DOCKER_HOME}/bin:${env.PATH}"]) {
+                        // This code will be executed with the PATH environment variable set to the Docker tool's bin directory.
+                    }
+                }
+            }
+        }
+
         stage('Checkout SCM') {
             steps {
                 checkout scm
@@ -13,36 +27,39 @@ pipeline {
         }
 
         stage('Build and Push Docker Images') {
+            // Conditionally execute this stage only when deploying to certain environments
             when {
                 expression {
                     return ENVIRONMENT in ['main', 'qa', 'uat']
                 }
             }
+
             steps {
                 // Build and push the Docker images for your applications
                 sh 'docker build -t react-app:latest ./react-deploy'
                 sh 'docker build -t spring-app-image:latest ./hello-world'
-                sh 'docker push react-app-image:latest'
+                sh 'docker push react-app:latest'
                 sh 'docker push spring-app-image:latest'
             }
         }
 
         stage('Deploy to Kubernetes') {
+            // Conditionally execute this stage only when deploying to certain environments
             when {
                 expression {
                     return ENVIRONMENT in ['main', 'qa', 'uat']
                 }
             }
-            steps {
-                // Determine the manifest file based on the environment
-                def manifestFile = "${ENVIRONMENT}-deployment.yaml"
 
-                // Deploy the app to Kubernetes using the Kubernetes Plugin
-                kubernetesDeploy(
-                    kubectl: 'kubectl',
-                    namespace: 'default', // Modify the namespace as needed
-                    manifests: manifestFile
-                )
+            steps {
+                // Use the script block to dynamically generate the manifest file
+                script {
+                    kubernetesDeploy(
+                        kubectl: 'kubectl',
+                        namespace: 'default', // Modify the namespace as needed
+                        manifests: MANIFEST_FILE
+                    )
+                }
             }
         }
     }
