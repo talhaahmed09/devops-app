@@ -3,7 +3,7 @@ pipeline {
 
     // Define environment variables
     environment {
-        ENVIRONMENT = "${BRANCH_NAME.toLowerCase()}" // Capture the branch name
+        ENVIRONMENT = "${branch.toLowerCase()}" // Capture the branch name
         MANIFEST_FILE = "${ENVIRONMENT}-deployment.yaml"
         DOCKER_HOME = tool "my-docker"
     }
@@ -12,7 +12,7 @@ pipeline {
         stage('Debug') {
          steps {
         echo "BRANCH_NAME: ${BRANCH_NAME}"
-    }
+        }
 }
 
         stage('Initialize') {
