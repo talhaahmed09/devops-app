@@ -11,7 +11,7 @@ pipeline {
         stages {
         stage('Debug') {
          steps {
-        echo "BRANCH_NAME: ${BRANCH_NAME}"
+        echo "branch: ${branch}"
         }
 }
 
