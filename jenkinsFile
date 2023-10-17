@@ -8,7 +8,13 @@ pipeline {
         DOCKER_HOME = tool "my-docker"
     }
 
-    stages {
+   
+        stage('Debug') {
+            steps {
+                echo "BRANCH_NAME: ${BRANCH_NAME}"
+        }
+
+
         stage('Initialize') {
             steps {
                 script {
